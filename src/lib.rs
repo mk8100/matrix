@@ -11,10 +11,19 @@ use std::ops::Rem;
 use std::fmt;
 
 
-// enum MatrixErr{
-//   NotEnoughDataInVector("n*m != v.len()"),   
-// }
+#[derive(Debug)]
+pub enum MatrixErr{
+  NotEnoughDataInVector,   
+  BothNcolsAndNrowsCannotBeZero,
+}
 
+impl Display for MatrixErr {
+
+     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let w = format!("{:?}",self);
+        write!(f, "MatrixErr::{}", w)
+     }
+}
 
 pub struct Matrix<T> 
     where T: MatrixNum<T>{
@@ -42,15 +51,15 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
 /// assert_eq!(m.ncols(),3);
 /// assert_eq!(*m.data().get(3).unwrap(),4);
 /// ```
-    pub fn new(m:u32, n:u32, v:Vec<T>) -> Result<Matrix<T>, &'static str>{
-        if m*n != v.len() as u32 { return Err("") };
-        Ok(
-            Matrix::<T>{
-                nrows : m,
-                ncols : n,
-                data : v,
-            }
-        )
+    pub fn new(m:u32, n:u32, v:Vec<T>) -> Result<Matrix<T>, MatrixErr>{
+
+        let res = match (m,n) {
+                        (0, 0) => Err( MatrixErr::BothNcolsAndNrowsCannotBeZero ),
+                        (m, n) if n*m != v.len() as u32 => Err( MatrixErr::NotEnoughDataInVector), 
+                        (_, _) => Ok( create_matrix(m,n,v) ),
+        };
+
+        res
     }
 
     pub fn ncols(&self) -> u32 {
@@ -65,6 +74,14 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
     }
 }
 
+
+fn create_matrix<T>(m:u32, n:u32, v:Vec<T>) -> Matrix<T> where T:MatrixNum<T>{
+            Matrix::<T>{
+                nrows : m,
+                ncols : n,
+                data : v,
+            }
+}
 
 impl <T> Display for Matrix<T> where T:MatrixNum<T>{
     /// a fmt function for Display Trait implementation
