@@ -7,14 +7,16 @@
 /// 
 use std::ops::{Mul,Add};
 use std::fmt::Display;
+use std::fmt::Debug;
 use std::ops::Rem;
 use std::fmt;
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum MatrixErr{
   NotEnoughDataInVector,   
   BothNcolsAndNrowsCannotBeZero,
+  EmptyVectorFound,
 }
 
 impl Display for MatrixErr {
@@ -25,6 +27,7 @@ impl Display for MatrixErr {
      }
 }
 
+#[derive(Debug)]
 pub struct Matrix<T> 
     where T: MatrixNum<T>{
         nrows: u32,
@@ -32,11 +35,11 @@ pub struct Matrix<T>
         data: Vec<T>,
 }
 
-pub trait MatrixNum<T>: Mul<T> + Add<T> + Rem<T> + Display {}
-impl<T> MatrixNum<T> for T where T: Mul + Add + Rem + Display {}
+pub trait MatrixNum<T>: Mul<T> + Add<T> + Rem<T> + Display + Debug {}
+impl<T> MatrixNum<T> for T where T: Mul + Add + Rem + Display + Debug {}
 
 impl <T> Matrix<T> where T:MatrixNum<T> {
-/// funtion for creating a new Matrix structure
+/// funtion for creating a new Matrix structure verifing certain conditions (see *Examples*)
 /// 
 /// # Arguments
 /// 
@@ -46,17 +49,28 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
 /// 
 /// # Examples
 /// ```
+/// use matrix::MatrixErr;
+/// 
 /// let m = matrix::Matrix::new(2,3,vec![1,2,3,4,5,6]).unwrap();
 /// assert_eq!(m.nrows(),2);
 /// assert_eq!(m.ncols(),3);
 /// assert_eq!(*m.data().get(3).unwrap(),4);
+/// 
+/// let n = matrix::Matrix::new(0,0,vec![1,2,3,4]);
+/// assert_eq!(n.unwrap_err(), MatrixErr::BothNcolsAndNrowsCannotBeZero);
+/// let n : Result<matrix::Matrix<u32>, MatrixErr> = matrix::Matrix::new(3,3,vec![]);
+/// assert_eq!(n.unwrap_err(), MatrixErr::EmptyVectorFound);
+/// let n = matrix::Matrix::new(3,3,vec![1,2,3,4]);
+/// assert_eq!(n.unwrap_err(), MatrixErr::NotEnoughDataInVector);
 /// ```
     pub fn new(m:u32, n:u32, v:Vec<T>) -> Result<Matrix<T>, MatrixErr>{
+
+        if v.len() as u32 == 0 { return Err(MatrixErr::EmptyVectorFound)}
 
         let res = match (m,n) {
                         (0, 0) => Err( MatrixErr::BothNcolsAndNrowsCannotBeZero ),
                         (m, n) if n*m != v.len() as u32 => Err( MatrixErr::NotEnoughDataInVector), 
-                        (_, _) => Ok( create_matrix(m,n,v) ),
+                        (m, n) => Ok( create_matrix(m,n,v) ),
         };
 
         res
@@ -65,6 +79,7 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
     pub fn ncols(&self) -> u32 {
         self.ncols
     }
+
     pub fn nrows(&self) -> u32 {
         self.nrows
     }
@@ -74,8 +89,13 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
     }
 }
 
-
+/// creates a Matrix struct,  assumed that params are verified
+/// 
 fn create_matrix<T>(m:u32, n:u32, v:Vec<T>) -> Matrix<T> where T:MatrixNum<T>{
+            println!("{} {}", m, n);
+            assert!( m != 0 && n != 0);
+            assert!( v.len() != 0);
+            //if m ==0 { m = (v.len() as u32 / n) }
             Matrix::<T>{
                 nrows : m,
                 ncols : n,
