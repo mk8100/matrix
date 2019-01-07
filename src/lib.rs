@@ -143,6 +143,8 @@ fn prn<T>(v:&[T]) -> String where T:MatrixNum<T>{
             .concat()
 }
 
+/// Macros
+
 
 #[test]
 fn display_test(){
