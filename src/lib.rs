@@ -11,7 +11,6 @@ use std::fmt::Debug;
 use std::ops::Rem;
 use std::fmt;
 
-
 #[derive(Debug, PartialEq)]
 pub enum MatrixErr{
   NotEnoughDataInVector,   
@@ -72,6 +71,13 @@ impl <T> Matrix<T> where T:MatrixNum<T> {
                         (m, n) if n*m != v.len() as u32 => Err( MatrixErr::NotEnoughDataInVector), 
                         (m, n) => Ok( create_matrix(m,n,v) ),
         };
+
+        let mut vec = vec![vec![1,2,3,4,5,6,7,8,9,10,11,12]; 4];
+
+        vec[1][2] = 99;
+
+        println!("{:?}", vec[1..4][1]);
+        println!("{:?}", vec[1]);
 
         res
     }
